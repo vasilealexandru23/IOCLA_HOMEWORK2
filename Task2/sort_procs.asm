@@ -89,21 +89,21 @@ swap_struct:
 	push edi
 	push esi
 	
-	mov ax, [edx + ecx]				; Swap between the structs first label.
+	mov ax, [edx + ecx]				; Swap proc[iterator1].id, proc[iterator2].id .
 	push eax
 	mov ax, [edx + ebx]
 	mov [edx + ecx + proc.pid], ax
 	pop eax
 	mov [edx + ebx + proc.pid], ax
 	
-	mov al, [edx + ecx + proc.prio] ; Swap between the structs second label.
+	mov al, [edx + ecx + proc.prio]	; Swap proc[iterator1].prio, proc[iterator2].prio .
 	push eax
 	mov al, [edx + ebx + proc.prio]
 	mov [edx + ecx + proc.prio], al
 	pop eax
 	mov [edx + ebx + proc.prio], al
 
-	mov ax, [edx + ecx + proc.time]	; Swap between the structs third label.
+	mov ax, [edx + ecx + proc.time]	; Swap proc[iterator1].time, proc[iterator2].time .
 	push eax
 	mov ax, [edx + ebx + proc.time]
 	mov [edx + ecx + proc.time], ax

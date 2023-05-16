@@ -1,5 +1,7 @@
 %include "../include/io.mac"
 
+LETTERS_COUNT EQU 26
+
 section .text
     global simple
 
@@ -34,7 +36,7 @@ iterate_chars:
     jmp iterate_chars               ; Continue the for loop.
 
 overflow:
-    sub bl, 26                      ; Get back into the alphabet.
+    sub bl, LETTERS_COUNT           ; Get back into the alphabet.
     mov byte [edi + eax], bl        ; Get new value in enc_string.
 
     inc eax                         ; Increase iterator.

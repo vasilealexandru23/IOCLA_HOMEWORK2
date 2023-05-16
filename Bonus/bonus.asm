@@ -1,3 +1,5 @@
+BOARD_SIZE equ 8
+
 section .text
     global bonus
 
@@ -10,242 +12,182 @@ bonus:
     mov ebx, [ebp + 12]	        ; y
     mov ecx, [ebp + 16]         ; board
 
-    push ecx
-    push ebx
-    push eax
+    push ecx                    ; Push on stack the address of the board.
+    push ebx                    ; Push on stack y coordinate.
+    push eax                    ; Push on stack x coordinate.
 
-    jmp up_left_neigh
+    jmp up_left_neigh           ; Verify first neigh.
 
-; Function that returns 2 ^ [edx].
-compute_power_2:
-    add eax, eax
-    dec edx
-    jnz compute_power_2
+compute_power_2:                ; Function that returns 2 ^ [edx].
+    add eax, eax                ; Double the counter.
+    dec edx                     ; Decrement power.
+    jnz compute_power_2         ; Continue the loop.
     ret
 
 check_overflow:
-    mov edx, [esp + 4]
-    add ecx, 4
-    cmp edx, 32
+    add ecx, 4                  ; Go to the address of board[1].
+    cmp edx, 32                 ; Compare the bit with the board[0/1].
     jl exit
-    sub edx, 32
-    sub ecx, 4
+    sub edx, 32                 ; Get the right bit for the board[0].
+    sub ecx, 4                  ; Get back the address of board[0].
 
 exit:
     ret
 
 check_coordinate:
     xor eax, eax
-    ; Get top of the stack
-    mov edx, [esp + 4]
+    mov edx, [esp + 4]          ; Get top of the stack, the coordinate to check.
 
-    ; Compare x/y_coordinate with 0(lower_bound).
-    cmp edx, 0
+    cmp edx, 0                  ; Compare x/y_coordinate with 0(lower_bound).
     jl out_of_range
 
-    ; Compare x/y_coordinate with 8 (upper_bound).
-    cmp edx, 8
+    cmp edx, BOARD_SIZE         ; Compare x/y_coordinate with 8 (upper_bound).
     jge out_of_range
 
-    ; Return true(1) -> x/y_coordinate is valid.
-    inc eax
+    inc eax                     ; Return true(1) -> x/y_coordinate is valid.
     ret
 
 out_of_range:
-    ; Return false(0) -> x/y_coordinate is not valid.
-    xor eax, eax
+    xor eax, eax                ; Return false(0) -> x/y_coordinate is not valid.
     ret
 
 mark_neigh:
-    ; Get the offset in the matrix
-    lea edx, [8 * eax + ebx]
+    lea edx, [8 * eax + ebx]    ; Get the offset in the matrix
 
-    ; Check if neigh is in board[0] or board[1].
-    push edx
-    call check_overflow
-    add esp, 4
+    call check_overflow         ; Check if neigh is in board[0] or board[1].
 
-    ; Compute 2 ^ [edx].
-    mov eax, 1
-    push edx
+    mov eax, 1                  ; Compute 2 ^ [edx], stored in eax.
     call compute_power_2
-    add esp, 4
 
-    ; Mark 1 in the "matrix".
-    add [ecx], eax
+    add [ecx], eax              ; Mark 1 in the "matrix".
     ret
 
 up_left_neigh:
-    ; Get new_x value.
-    dec eax
-    ; Get new_y value.
-    inc ebx
+	dec eax 					; Get neigh_x value.
+	inc ebx						; Get neig_y value.
 
-    ; Check if new_x coordinate is valid.
-    push eax
-    call check_coordinate
-    add esp, 4
+	push eax					; Store on stack the value in eax.
+	call check_coordinate 		; Check if neigh_x coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; If the new_x isn't valid, we restore the values.
     cmp eax, 0
-    je restore
+	je restore_1_neigh			; If the neigh_x isn't valid, we restore the values.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    dec eax
 
-    ; Check if new_y coordinate is valid.
-    push ebx
-    call check_coordinate
-    add esp, 4
+    mov eax, [esp]				; restore into eax the neigh_x value.
+	dec eax
 
-    ; If the new_y isn't valid, we restore the values.
-    cmp eax, 0
-    je restore
+	push ebx					; Store on stack the value in ebx.
+	call check_coordinate		; Check if neigh_y coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    dec eax
+	cmp eax, 0
+	je restore_1_neigh			; If the neigh_y isn't valid, we restore the values.
 
-    ; Mark the new neigh.
-    call mark_neigh
+	mov eax, [esp]				; restore into eax the neigh_x value.
+	dec eax
 
-restore:
-    ; Restore the values in registers of the initial position in the matrix.
-    mov eax, [esp]
-    mov ebx, [esp + 4]
-    mov ecx, [esp + 8]
+	call mark_neigh				; Mark the new neigh.
+
+restore_1_neigh:
+    mov eax, [esp]              ; Restore the x value in eax.
+    mov ebx, [esp + 4]          ; Restore the y value in ebx.
+    mov ecx, [esp + 8]          ; Restore the address of the board.
 
 up_right_neigh:
-    ; Get new_x value.
-    inc eax
-    ; Get new_y value.
-    inc ebx
-    
-    ; Check if new_x coordinate is valid.
-    push eax
-    call check_coordinate
-    add esp, 4
+    inc eax						; Get neigh_x value.
+	inc ebx						; Get neigh_y value.
+	
+	push eax					; Store on stack the value in eax.
+	call check_coordinate 		; Check if neigh_x coordinate is valid.
+	add esp, 4					; Clean the stack.
+	cmp eax, 0
+	je restore_2_neigh			; If the neigh_x isn't valid, we restore the values.
 
-    ; If the new_x isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_2
+	mov eax, [esp]				; Eestore into eax the neigh_x value.
+	inc eax
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    inc eax
+	push ebx					; Store on stack the value in ebx.
+	call check_coordinate		; Check if neigh_y coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; Check if new_y coordinate is valid.
-    push ebx
-    call check_coordinate
-    add esp, 4
+	cmp eax, 0
+	je restore_2_neigh			; If the neigh_y isn't valid, we restore the values.
 
-    ; If the new_y isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_2
+	mov eax, [esp]				; Restore into eax the neigh_x value.
+	inc eax
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    inc eax
+	call mark_neigh				; Mark the new neigh.
 
-    ; Mark the new neigh.
-    call mark_neigh
-
-restore_2:
-    ; Restore the values in registers of the initial position in the matrix.
-    mov eax, [esp]
-    mov ebx, [esp + 4]
-    mov ecx, [esp + 8]
+restore_2_neigh:
+	mov eax, [esp] 				; Restore the x value in eax.
+	mov ebx, [esp + 4]			; Restore the y value in ebx
+    mov ecx, [esp + 8]          ; Restore the address of the board.
     
 down_left_neigh:
-    ; Get new_x value.
-    dec eax
-    ; Get new_y value.
-    dec ebx
+	dec eax						; Get neigh_x value.
+	dec ebx						; Get neig_y value.
 
-    ; Check if new_x coordinate is valid.
-    push eax
-    call check_coordinate
-    add esp, 4
+	push eax					; Store on stack the value in eax.
+	call check_coordinate 		; Check if neigh_x coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; If the new_x isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_3
+	cmp eax, 0
+	je restore_3_neigh			; If the neigh_x isn't valid, we restore the values.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    dec eax
+	mov eax, [esp]				; Restore into eax the neigh_x value.
+	dec eax
 
-    ; Check if new_y coordinate is valid.
-    push ebx
-    call check_coordinate
-    add esp, 4
+	push ebx					; Store on stack the value in ebx.
+	call check_coordinate		; Check if neigh_y coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; If the new_y isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_3
+	cmp eax, 0
+	je restore_3_neigh			; If the neigh_y isn't valid, we restore the values.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    dec eax
+	mov eax, [esp]				; Restore into eax the neigh_x value.
+	dec eax
 
-    ; Mark the new neigh.
-    call mark_neigh
+	call mark_neigh				; Mark the new neigh.
 
-restore_3:
-    ; Restore the values in registers of the initial position in the matrix.
-    mov eax, [esp]
-    mov ebx, [esp + 4]
-    mov ecx, [esp + 8]
+restore_3_neigh:
+	mov eax, [esp] 				; Restore the x value in eax.
+	mov ebx, [esp + 4]			; Restore the y value in ebx.
+    mov ecx, [esp + 8]          ; Restore the address of the board.
 
 down_right_neigh:
-    ; Get new_x value.
-    inc eax
-    ; Get new_y value.
-    dec ebx
+	inc eax						; Get neigh_x value.
+	dec ebx						; Get neigh_y value.
 
-    ; Check if new_x coordinate is valid.
-    push eax
-    call check_coordinate
-    add esp, 4
+	push eax					; Store on stack the value in eax.
+	call check_coordinate 		; Check if neigh_x coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; If the new_x isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_4
+	cmp eax, 0
+	je restore_4_neigh			; If the neigh_x isn't valid, we restore the values.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    inc eax
+	mov eax, [esp]				; Restore into eax the neigh_x value.
+	dec eax
 
-    ; Check if new_y coordinate is valid.
-    push ebx
-    call check_coordinate
-    add esp, 4
+	push ebx					; Store on stack the value in ebx.
+	call check_coordinate		; Check if neigh_y coordinate is valid.
+	add esp, 4					; Clean the stack.
 
-    ; If the new_y isn't valid, we restore the values.
-    cmp eax, 0
-    je restore_4
+	cmp eax, 0
+	je restore_4_neigh			; If the neigh_y isn't valid, we restore the values.
 
-    ; Restore into eax the new_x value.
-    mov eax, [esp]
-    inc eax
+	mov eax, [esp]				; Restore into eax the neigh_x value.
+	inc eax
 
-    ; Mark the new neigh.
-    call mark_neigh
+	call mark_neigh				; Mark the new neigh.
 
-restore_4:
-    ; Restore the values in registers of the initial position in the matrix.
-    mov eax, [esp]
-    mov ebx, [esp + 4]
-    mov ecx, [esp + 8] 
+restore_4_neigh:
+	mov eax, [esp] 				; Restore the x value in eax.
+	mov ebx, [esp + 4]			; Restore the y value in ebx.
+    mov ecx, [esp + 8]          ; Restore the address of the board.
 
-    ; Clean the stack.
-    add esp, 12
+    add esp, 12                 ; Clean the stack.
 
-
-    ;; FREESTYLE ENDS HERE
-    ;; DO NOT MODIFY
     popa
     leave
     ret
-    ;; DO NOT MODIFY

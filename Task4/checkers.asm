@@ -15,11 +15,11 @@ checkers:
 	push ebx                	; Push on stack x coordinate.
 	push eax                	; Push on stack y coordinate.
 
-	jmp up_left_neigh
+	jmp up_left_neigh			; Verify first neigh.
 
 check_coordinate:
 	xor eax, eax
-	mov edx, [esp + 4]			; Get top of the stack.
+	mov edx, [esp + 4]			; Get top of the stack, the coordinate to check.
 
 	cmp edx, 0					; Compare x/y_coordinate with 0(lower_bound).
 	jl out_of_range
@@ -48,9 +48,9 @@ up_left_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore					; If the neigh_x isn't valid, we restore the values.
+	je restore_1_neigh			; If the neigh_x isn't valid, we restore the values.
 
-	mov eax, [esp]				; Restore into eax the neigh_x value.
+	mov eax, [esp]				; restore into eax the neigh_x value.
 	dec eax
 
 	push ebx					; Store on stack the value in ebx.
@@ -58,14 +58,14 @@ up_left_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore					; If the neigh_y isn't valid, we restore the values.
+	je restore_1_neigh			; If the neigh_y isn't valid, we restore the values.
 
-	mov eax, [esp]				; Restore into eax the neigh_x value.
+	mov eax, [esp]				; Eestore into eax the neigh_x value.
 	dec eax
 
 	call mark_neigh				; Mark the new neigh.
 
-restore:
+restore_1_neigh:
 	mov eax, [esp] 				; Restore the x value in eax.
 	mov ebx, [esp + 4]			; Restore the y value in ebx.
 
@@ -78,9 +78,9 @@ up_right_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_2				; If the neigh_x isn't valid, we restore the values.
+	je restore_2_neigh			; If the neigh_x isn't valid, we restore the values.
 
-	mov eax, [esp]				; Restore into eax the neigh_x value.
+	mov eax, [esp]				; Eestore into eax the neigh_x value.
 	inc eax
 
 	push ebx					; Store on stack the value in ebx.
@@ -88,14 +88,14 @@ up_right_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_2				; If the neigh_y isn't valid, we restore the values.
+	je restore_2_neigh			; If the neigh_y isn't valid, we restore the values.
 
 	mov eax, [esp]				; Restore into eax the neigh_x value.
 	inc eax
 
 	call mark_neigh				; Mark the new neigh.
 
-restore_2:
+restore_2_neigh:
 	mov eax, [esp] 				; Restore the x value in eax.
 	mov ebx, [esp + 4]			; Restore the y value in ebx.
 	
@@ -108,7 +108,7 @@ down_left_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_3				; If the neigh_x isn't valid, we restore the values.
+	je restore_3_neigh			; If the neigh_x isn't valid, we restore the values.
 
 	mov eax, [esp]				; Restore into eax the neigh_x value.
 	dec eax
@@ -118,27 +118,27 @@ down_left_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_3				; If the neigh_y isn't valid, we restore the values.
+	je restore_3_neigh			; If the neigh_y isn't valid, we restore the values.
 
 	mov eax, [esp]				; Restore into eax the neigh_x value.
 	dec eax
 
 	call mark_neigh				; Mark the new neigh.
 
-restore_3:
+restore_3_neigh:
 	mov eax, [esp] 				; Restore the x value in eax.
 	mov ebx, [esp + 4]			; Restore the y value in ebx.
 
 down_right_neigh:
 	inc eax						; Get neigh_x value.
-	dec ebx						; ; Get neig_y value.
+	dec ebx						; Get neigh_y value.
 
 	push eax					; Store on stack the value in eax.
 	call check_coordinate 		; Check if neigh_x coordinate is valid.
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_4				; If the neigh_x isn't valid, we restore the values.
+	je restore_4_neigh			; If the neigh_x isn't valid, we restore the values.
 
 	mov eax, [esp]				; Restore into eax the neigh_x value.
 	dec eax
@@ -148,14 +148,14 @@ down_right_neigh:
 	add esp, 4					; Clean the stack.
 
 	cmp eax, 0
-	je restore_4				; If the neigh_y isn't valid, we restore the values.
+	je restore_4_neigh			; If the neigh_y isn't valid, we restore the values.
 
 	mov eax, [esp]				; Restore into eax the neigh_x value.
 	inc eax
 
 	call mark_neigh				; Mark the new neigh.
 
-restore_4:
+restore_4_neigh:
 	mov eax, [esp] 				; Restore the x value in eax.
 	mov ebx, [esp + 4]			; Restore the y value in ebx.
 
